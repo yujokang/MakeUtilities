@@ -1,0 +1,7 @@
+MakeUtilities
+
+Some Java libraries for automatically generating Makefiles for C/C++ projects.
+
+To compile, run "make", which will generate "make_utils.jar",
+which you can use with your own Java programs to automate
+the creation of Makefiles for large C/C++ projects.
