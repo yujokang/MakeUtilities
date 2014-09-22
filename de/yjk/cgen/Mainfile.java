@@ -174,6 +174,7 @@ public class Mainfile extends Makefile
 		output.assignVar(Makefile.STATIC_CPPFLAGS_VAR,
 				 STATIC_CPPFLAGS_VAL);
 		output.assignVar(Makefile.AR_FLAGS_VAR, AR_FLAGS_VAL);
+		output.assignVar(Makefile.RM_FLAGS_VAR, RM_FLAGS_VAL);
 
 		output.close();
 

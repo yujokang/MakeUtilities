@@ -52,7 +52,7 @@ public class Makefile
 	/* archive flags */
 	public static final String AR_FLAGS_VAR = "AR_FLAGS";
 	/* file removal flags */
-	private static final String RM_FLAGS_VAR = "RM_FLAGS";
+	public static final String RM_FLAGS_VAR = "RM_FLAGS";
 	/*
 	 * static part of C preprocessor flags,
 	 * ie. everything except for include flags
@@ -446,6 +446,14 @@ public class Makefile
 		/* Define cleanup rule */
 		writeRuleHeader(output, MAKE_CLEAN_RULE);
 		output.indent();
+		/* clean up own objects and targets */
+		output.write(MakeFormatter
+			     .genList(MakeFormatter.genUseVar(RM_VAR),
+				      MakeFormatter.genUseVar(RM_FLAGS_VAR),
+				      MakeFormatter.genUseVar(OBJECTS_VAR),
+				      MakeFormatter.genUseVar(TARGETS_VAR)));
+		output.newLine();
+		/* clean up subdirectories */
 		for (Makefile subdir : subdirs) {
 			output
 			.write(MakeFormatter
