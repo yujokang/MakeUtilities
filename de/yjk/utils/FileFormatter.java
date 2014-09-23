@@ -1,4 +1,5 @@
-/*
+/**
+ * FileFormatter.java
  * Helps create formatted code files by preserving indentation across lines
  */
 package de.yjk.utils;
@@ -8,25 +9,25 @@ import java.io.FileWriter;
 import java.io.Writer;
 import java.io.BufferedWriter;
 import java.io.IOException;
-/*
+/**
  * Subclass of BufferedWriter that preserves indentation across new lines,
  * unless explicitly unindented.
  * Helps generate readable code.
  */
 public class FileFormatter extends BufferedWriter
 {
-	/* Character for single indent */
+	/** Character for single indent */
 	private static final char INDENT_CHAR = '\t';
 
-	/* Indentation count, initialized to 0 */
+	/** Indentation count, initialized to 0 */
 	private int indentation;
-	/*
+	/**
 	 * Was a new line started? If so, need to add indents.
 	 * Initialized to true
 	 */
 	private boolean new_line;
 
-	/*
+	/**
 	 * General constructor helper that initializes fields in this class,
 	 * and not specific to any BufferedWriter constructor.
 	 */
@@ -36,7 +37,7 @@ public class FileFormatter extends BufferedWriter
 		new_line = true;
 	}
 
-	/*
+	/**
 	 * Constructor that automatically wraps new FileWriter around
 	 * the given File object,
 	 * and passes it to the BufferedWriter(Writer) constructor
@@ -50,7 +51,7 @@ public class FileFormatter extends BufferedWriter
 		init();
 	}
 
-	/*
+	/**
 	 * Constructor wrapper for the BufferedWriter(Writer) constructor
 	 * @param out	the Writer to pass to the BufferedWriter constructor
 	 */
@@ -60,7 +61,7 @@ public class FileFormatter extends BufferedWriter
 		init();
 	}
 
-	/*`
+	/**
 	 * Constructor wrapper for the BufferedWriter(Writer, int) constructor
 	 * @param out	the Writer to pass to the BufferedWriter constructor
 	 * @param sz	the int size to pass to the BufferedWriter constructor
@@ -71,7 +72,7 @@ public class FileFormatter extends BufferedWriter
 		init();
 	}
 
-	/*
+	/**
 	 * Wrapper to newLine of superclass
 	 * to record fact that new line was started
 	 * @throws IOException	if superclass newLine function throws it
@@ -82,7 +83,7 @@ public class FileFormatter extends BufferedWriter
 		new_line = true;
 	}
 
-	/*
+	/**
 	 * Increment indentation
 	 */
 	public void indent()
@@ -90,7 +91,7 @@ public class FileFormatter extends BufferedWriter
 		indentation++;
 	}
 
-	/*
+	/**
 	 * Decrement indentation, unless it is not positive,
 	 * in which case the function throws an UnindentException
 	 */
@@ -102,7 +103,7 @@ public class FileFormatter extends BufferedWriter
 		indentation--;
 	}
 
-	/*
+	/**
 	 * Write indentation characters if Writer is on new line,
 	 * and disable automatic indenting on this line, which is no longer new
 	 * @throws IOException	if writing indentation characters failed
@@ -124,7 +125,7 @@ public class FileFormatter extends BufferedWriter
 		}
 	}
 
-	/*
+	/**
 	 * Wrapper class for BufferedWriter.write(int),
 	 * with attempted indentation
 	 * @param c	character value to pass to super method
@@ -136,7 +137,7 @@ public class FileFormatter extends BufferedWriter
 		super.write(c);
 	}
 
-	/*
+	/**
 	 * Wrapper class for BufferedWriter.write(char[], int, int),
 	 * with attempted indentation
 	 * @param cbuf	character buffer to pass to super method
@@ -150,7 +151,7 @@ public class FileFormatter extends BufferedWriter
 		super.write(cbuf, off, len);
 	}
 
-	/*
+	/**
 	 * Wrapper class for BufferedWriter.write(String, int, int),
 	 * with attempted indentation
 	 * @param s	character string to pass to super method
@@ -164,7 +165,7 @@ public class FileFormatter extends BufferedWriter
 		super.write(s, off, len);
 	}
 
-	/*
+	/**
 	 * Wrapper class for Writer.write(char[]),
 	 * with attempted indentation
 	 * @param cbuf	character buffer to pass to super method
@@ -176,7 +177,7 @@ public class FileFormatter extends BufferedWriter
 		super.write(cbuf);
 	}
 
-	/*
+	/**
 	 * Wrapper class for Writer.write(String),
 	 * with attempted indentation
 	 * @param s	character string to pass to super method
@@ -188,7 +189,7 @@ public class FileFormatter extends BufferedWriter
 		super.write(s);
 	}
 
-	/*
+	/**
 	 * Exception when unindent() is called, but there is no more indentation
 	 */
 	public static class UnindentException extends RuntimeException
@@ -205,5 +206,5 @@ public class FileFormatter extends BufferedWriter
 		{
 			super(UNINDENT_ERROR_MESSAGE);
 		}
-	}	
+	}
 }

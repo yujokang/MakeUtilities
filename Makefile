@@ -1,7 +1,8 @@
-.PHONY:classes
+.PHONY:classes docs
 
 JAVAC=javac
 JAR=jar
+JAVADOC=javadoc
 
 JARFLAGS=cf
 
@@ -28,6 +29,9 @@ classes: ${SOURCES}
 
 make_utils.jar: classes
 	${JAR} cf $@ ${CLASSES}
+
+docs:
+	${JAVADOC} ${SOURCES}
 
 clean:
 	rm -rf ${CLASSES} ${TARGETS}

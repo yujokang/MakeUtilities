@@ -1,4 +1,5 @@
-/*
+/**
+ * BinaryTarget.java
  * Executable binary
  */
 package de.yjk.cgen;
@@ -6,11 +7,14 @@ package de.yjk.cgen;
 import java.io.IOException;
 import java.util.Collection;
 
+/**
+ * Executable binary target, which can consist of various binary dependencies.
+ */
 public class BinaryTarget extends Target
 {
-	/* are all dependencies generated with the C compiler? */
+	/** are all dependencies generated with the C compiler? */
 	private boolean all_c;
-	/*
+	/**
 	 * Calls Target(String, Collection<String>) superconstructor,
 	 * and records if the target is all C source code
 	 * @param n	n in superconstructor

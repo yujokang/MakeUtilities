@@ -1,4 +1,5 @@
-/*
+/**
+ * ArchiveTarget.java
  * Archive file
  */
 package de.yjk.cgen;
@@ -6,9 +7,13 @@ package de.yjk.cgen;
 import java.io.IOException;
 import java.util.Collection;
 
+/**
+ * Archive file target and its dependencies,
+ * which are object files that compose it
+ */
 public class ArchiveTarget extends Target
 {
-	/*
+	/**
 	 * Calls corresponding superconstructor in Target
 	 * @param n	n in superconstructor
 	 * @param ds	ds in superconstructor

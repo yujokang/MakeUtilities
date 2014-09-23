@@ -1,4 +1,5 @@
-/*
+/**
+ * Target.java
  * Generates special rule for a special target,
  * which will be listed under TARGETS
  */
@@ -7,14 +8,18 @@ package de.yjk.cgen;
 import java.io.IOException;
 import java.util.Collection;
 
+/**
+ * Abstract class to generate custom rule,
+ * whose name will be listed under TARGETS
+ */
 public abstract class Target
 {
-	/* the target to be generated */
+	/** the target to be generated */
 	private String name;
-	/* files on which the rule depends */
+	/** files on which the rule depends */
 	private String[] dependencies;
 
-	/*
+	/**
 	 * @param n	name
 	 * @param ds	contains elements to put into dependencies
 	 */
@@ -30,7 +35,7 @@ public abstract class Target
 		}
 	}
 
-	/*
+	/**
 	 * Get name of rule, so that it can be used in target lists
 	 * @return	name
 	 */
@@ -39,7 +44,7 @@ public abstract class Target
 		return name;
 	}
 
-	/*
+	/**
 	 * Generate the rule to create the target
 	 * @param output	the output stream
 	 * @throws		IOException if there was error during writing
@@ -55,7 +60,7 @@ public abstract class Target
 		output.newLine();
 	}
 
-	/*
+	/**
 	 * Generate the body of the rule to create the target
 	 * @param output	the output stream
 	 * @throws		IOException if there was error during writing

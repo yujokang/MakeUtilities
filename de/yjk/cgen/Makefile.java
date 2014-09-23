@@ -1,6 +1,11 @@
-/*
+/**
+ * Makefile.java
  * Populates Makefile with rules, and generates the Makefiles
- * for a directory and its subdirectories
+ * for a directory and its subdirectories.
+ * Using the populate() function automatically generates rules
+ * to make object files from all the source files
+ * directly contained in the directory and an archive from the object files,
+ * and recursively does the same for any selected, or all subdirectories
  */
 package de.yjk.cgen;
 
@@ -14,104 +19,116 @@ import java.io.IOException;
 
 import de.yjk.utils.FileFormatter;
 
-/*
+/**
  * Contains Makefile components.
  * Used to generate Makefile
  */
 public class Makefile
 {
-	/* the directory that will contain the Makefile */
+	/** the directory that will contain the Makefile */
 	private File build_dir;
-	/* the top-level directory and its Makefile data */
+	/** the top-level directory and its Makefile data */
 	private Mainfile root;
-	/* names of objects to generate directly in this subdirectory */
+	/** names of objects to generate directly in this subdirectory */
 	private List<String> object_names;
-	/* special target outputs */
+	/** special target outputs */
 	private List<Target> targets;
-	/* subdirectories, which will at least require own Makefiles */
+	/** subdirectories, which will at least require own Makefiles */
 	private List<Makefile> subdirs;
 
 	/* common variable names */
-	public static final String CC_VAR = "CC"; /* C compiler */
-	public static final String CPP_VAR = "CXX"; /* C++ compiler */
-	private static final String MAKE_VAR = "MAKE"; /* make command */
+	public static final String CC_VAR = "CC"; /** C compiler variable */
+	public static final String CPP_VAR = "CXX"; /** C++ compiler variable */
+	/** make command variable */
+	private static final String MAKE_VAR = "MAKE";
 	/* shell commands */
-	public static final String AR_VAR = "AR"; /* archive creator */
-	/* remove file when cleaning */
+	/** variable for archive creator */
+	public static final String AR_VAR = "AR";
+	/** variable for command to remove files when cleaning */
 	private static final String RM_VAR = "RM";
 	/* lists of rules */
-	/* list of subdirectories */
+	/** variable for list of subdirectories */
 	private static final String SUBDIRS_VAR = "SUBDIRS";
-	private static final String OBJECTS_VAR = "OBJS"; /* object list */
-	/* list of targets that will be used outside of the directory */
+	/** variable for objects list */
+	private static final String OBJECTS_VAR = "OBJS";
+	/**
+	 * variable for list of targets that
+	 * will be used outside of the directory
+	 */
 	private static final String TARGETS_VAR = "TARGETS";
 	/* directories */
-	/* the include directory */
+	/** variable for the include directory option */
 	protected static final String INCLUDE_VAR = "INCLUDE";
 	/* command flags */
-	/* archive flags */
+	/** variable for the archive command flags */
 	public static final String AR_FLAGS_VAR = "AR_FLAGS";
-	/* file removal flags */
+	/** variable for the file removal flags */
 	public static final String RM_FLAGS_VAR = "RM_FLAGS";
-	/*
-	 * static part of C preprocessor flags,
+	/**
+	 * variable for the static part of C preprocessor flags,
 	 * ie. everything except for include flags
 	 */
 	public static final String STATIC_CPPFLAGS_VAR = "_CPPFLAGS";
-	/* C preprocessor flags */
+	/** variable fo all the C preprocessor flags */
 	public static final String CPPFLAGS_VAR = "CPPFLAGS";
 
-	/* C preprocessor flags value */
+	/** value of the C preprocessor flags */
 	private static final String
 	CPPFLAGS_VAL = MakeFormatter
 		       .genList(MakeFormatter.genUseVar(STATIC_CPPFLAGS_VAR),
 				MakeFormatter.genUseVar(INCLUDE_VAR));
 
-	/* mark between the rule name and dependencies in the rule header */
+	/** mark between the rule name and dependencies in the rule header */
 	private static final String RULE_NAME_END = ":";
 
-	/* name of Makefile, relative to this directory */
+	/** name of Makefile, relative to this directory */
 	private static final String MAKEFILE_NAME = "Makefile";
-	/* make flag to switch to subdirectory */
+	/** make flag to switch to subdirectory */
 	public static final String MAKE_SWITCH_FLAG = "-C";
-	/* Makefile's default rule */
+	/** Makefile's default rule */
 	public static final String MAKE_ALL_RULE = "all";
-	/* Makefile's clean rule */
+	/** Makefile's clean rule */
 	public static final String MAKE_CLEAN_RULE = "clean";
-	/*
+	/**
 	 * declares list of phony rules,
 	 * ie. rules for subdirectories that are not generated
 	 */
 	public static final String PHONY_DECL = ".PHONY:";
-	/* include command in Makefile */
+	/** include command in Makefile */
 	public static final String INCLUDE_CMD = "include";
 
 	/* extensions */
-	/* extension marker */
+	/** extension marker */
 	public static final String EXT_MARKER = ".";
 	/* output files */
-	public static final String ARCHIVE_EXT = EXT_MARKER + "a"; /* archive */
-	public static final String OBJ_EXT = EXT_MARKER + "o"; /* object file */
+	/** archive extension */
+	public static final String ARCHIVE_EXT = EXT_MARKER + "a";
+	/** object file extension */
+	public static final String OBJ_EXT = EXT_MARKER + "o";
 	/* input files */
-	public static final String C_EXT = EXT_MARKER + "c"; /* C source */
+	/** C source extension */
+	public static final String C_EXT = EXT_MARKER + "c";
 	/* C++ source extensions */
+	/** regular C++ extension */
 	public static final String CPP_0_EXT = EXT_MARKER + "cpp";
+	/** first alternative C++ extension */
 	public static final String CPP_1_EXT = EXT_MARKER + "cxx";
+	/** second alternative C++ extension */
 	public static final String CPP_2_EXT = EXT_MARKER + "c++";
-	/* array of source code extensions */
+	/** array of source code extensions */
 	public static final String[] CODE_EXTS = {C_EXT, CPP_0_EXT, CPP_1_EXT,
 						  CPP_2_EXT};
-	/* the C preprocessor flag before a directory to include */
+	/** the C preprocessor flag before a directory to include */
 	public static final String INCLUDE_FLAG = "-I";
 
-	/*
+	/**
 	 * built-in variables for output (after "-o" flag)
 	 * and list of dependencies
 	 */
 	public static String
 	USE_OUT_IN_VARS = MakeFormatter.genList("$@", "$^");
 
-	/*
+	/**
 	 * Convert arbitrary collection of strings into an array
 	 * @param collection	collection to convert to array
 	 * @return		array containing exactly
@@ -129,9 +146,13 @@ public class Makefile
 		return ret_array;
 	}
 
-	/*
+	/**
 	 * Generate Makefile rule header for
 	 * an array of dependencies
+	 * @param output	the output stream to write to
+	 * @param name		name of rule
+	 * @param dependencies	arrayr of names of dependencies
+	 * @throws		IOException if writing failed
 	 */
 	public static void
 	writeRuleHeader(MakeFormatter output, String name,
@@ -145,7 +166,7 @@ public class Makefile
 		output.newLine();
 	}
 
-	/*
+	/**
 	 * Generate Makefile rule header for
 	 * arbitrary Collection of dependencies.
 	 * @param output	the output stream to write to
@@ -160,7 +181,7 @@ public class Makefile
 		writeRuleHeader(output, name, toArray(dependencies));
 	}
 
-	/*
+	/**
 	 * sets root Makefile
 	 * @param r	root
 	 */
@@ -169,7 +190,7 @@ public class Makefile
 		root = r;
 	}
 
-	/*
+	/**
 	 * Return the directory that will contain this Makefile.
 	 * Used by genProject to generate common resources file
 	 * @return	build_dir
@@ -179,7 +200,7 @@ public class Makefile
 		return build_dir;
 	}
 
-	/*
+	/**
 	 * Return the path to the directory that will contain this Makefile.
 	 * Used by findRelPath(Makefile subdir)
 	 * to find relative path to root directory
@@ -191,7 +212,7 @@ public class Makefile
 		return build_dir.getCanonicalPath();
 	}
 
-	/*
+	/**
 	 * Helper function to get name of directory,
 	 * which is used in generate
 	 */
@@ -200,7 +221,7 @@ public class Makefile
 		return build_dir.getName();
 	}
 
-	/*
+	/**
 	 * @param bd				arbitrary path that will be
 	 *					canonicalized to build_dir
 	 * @param r				root
@@ -222,7 +243,7 @@ public class Makefile
 		subdirs = new LinkedList<Makefile>();
 	}
 
-	/*
+	/**
 	 * Generate name of archive according to the directory name
 	 */
 	private String toArchiveName()
@@ -230,7 +251,7 @@ public class Makefile
 		return getName() + ARCHIVE_EXT;
 	}
 
-	/*
+	/**
 	 * Add a object file
 	 * @param object	name of object file,
 	 *			relative to this directory, to add
@@ -240,7 +261,7 @@ public class Makefile
 		object_names.add(object);
 	}
 
-	/*
+	/**
 	 * Add a target
 	 * @param target	target to add
 	 */
@@ -249,7 +270,7 @@ public class Makefile
 		targets.add(target);
 	}
 
-	/*
+	/**
 	 * Add a subdirectory's Makefile data
 	 * @param subdir	subdirectory's Makefile data
 	 */
@@ -258,7 +279,7 @@ public class Makefile
 		subdirs.add(subdir);
 	}
 
-	/*
+	/**
 	 * Helper function of populate function to check if
 	 * a file is a C or C++ source file, according to its name
 	 * @param name	name of possible source file
@@ -275,11 +296,12 @@ public class Makefile
 		return false;
 	}
 
-	/*
+	/**
 	 * Populate with the existing source files,
+	 * an archive that will be generated from the source files,
 	 * and, recursively, either the given subdirectories,
 	 * or all the subdirectories.
-	 * Returns paths to archives to be generated
+	 * Returns paths to archives to be generated.
 	 * @param subdir_names	array of subdirectories to use.
 	 *			If empty use none. If null, use all.
 	 * @return		list of paths to generated library targets
@@ -342,7 +364,7 @@ public class Makefile
 		return archives;
 	}
 
-	/*
+	/**
 	 * error thrown by populate if purported directory is not a directory
 	 */
 	public static class NotDirectoryException extends IOException
@@ -363,7 +385,7 @@ public class Makefile
 		}
 	}
 
-	/*
+	/**
 	 * Generate the Makefile, and those of the subdirectories
 	 * @throws IOException	if there was an error in writing the Makefiles
 	 */
@@ -472,22 +494,22 @@ public class Makefile
 	}
 }
 
-/*
+/**
  * Generates files formatted in the Makefile/shell syntax
  */
 class MakeFormatter extends FileFormatter
 {
-	/* template for using value of variable */
+	/** template for using value of variable */
 	private static final String VAR_USE_FMT = "$(%s)";
-	/* template for assigning value of variable */
+	/** template for assigning value of variable */
 	private static final String VAR_DEF_FMT = "%s=%s";
-	/* template for concatenating value to variable */
+	/** template for concatenating value to variable */
 	private static final String VAR_CAT_FMT = "%s+=%s";
 
-	/* delimiter between list elements, such as multiple options */
+	/** delimiter between list elements, such as multiple options */
 	public static final char LIST_DELIM = ' ';
 
-	/*
+	/**
 	 * Constructor for FileFormatter(File)
 	 * @param in_file	File object to pass to the superconstructor
 	 * @throws IOException	if that is thrown by superconstructor
@@ -497,7 +519,7 @@ class MakeFormatter extends FileFormatter
 		super(in_file);
 	}
 
-	/*
+	/**
 	 * Write line to assign value to named variable
 	 * @param name		name of variable
 	 * @param value		new value of variable
@@ -509,7 +531,7 @@ class MakeFormatter extends FileFormatter
 		newLine();
 	}
 
-	/*
+	/**
 	 * Write line to append value to named variable
 	 * @param name		name of variable
 	 * @param append_value	value to append variable
@@ -522,7 +544,7 @@ class MakeFormatter extends FileFormatter
 		newLine();
 	}
 
-	/*
+	/**
 	 * Write variable dereferencing expression
 	 * @param name		name of variable
 	 * @return		expression for dereferencing variable
@@ -532,7 +554,7 @@ class MakeFormatter extends FileFormatter
 		return String.format(VAR_USE_FMT, name);
 	}
 
-	/*
+	/**
 	 * Join String elements by list delimiter
 	 * @param elements	array of elements to join.
 	 *			Can be null or empty, for an empty return value

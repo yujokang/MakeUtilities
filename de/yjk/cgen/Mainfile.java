@@ -1,4 +1,5 @@
-/*
+/**
+ * Mainfile.java
  * Makefile data for root directory, as well as common definitions file
  * and include directory
  */
@@ -7,51 +8,57 @@ package de.yjk.cgen;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * Specific data for Makefile of root directory,
+ * where a common definitions file needs to be generated,
+ * and the include directory could be.
+ * Use this class as the entry point to generate all Makefiles for the project.
+ */
 public class Mainfile extends Makefile
 {
-	/* the root directory of the project */
+	/** the root directory of the project */
 	private File dir;
-	/* common.mk, the common resource file */
+	/** common.mk, the common resource file */
 	private File common_file;
-	/*
+	/**
 	 * is there a common include file
 	 * that needs to be in the C compile flags?
 	 */
 	private boolean has_include;
 
-	/* name of the common resource file, relative to the root directory */
+	/** name of the common resource file, relative to the root directory */
 	public static final String COMMON_NAME = "common.mk";
-	/* name of the include directory, relative to the root directory */
+	/** name of the include directory, relative to the root directory */
 	public static final String INCLUDE_NAME = "include";
 
-	/*
-	 * Common variable names that are not explicitly used outside of
-	 * the common resource file
-	 */
 	/* Values of common variables */
 	/* shell commands */
-	private static final String AR_VAL = "ar"; /* archive creator */
-	/* remove file when cleaning */
+	/** value of archive creator */
+	private static final String AR_VAL = "ar";
+	/** command to remove file when cleaning */
 	private static final String RM_VAL = "rm";
-	private static final String CC_VAL = "gcc"; /* C compiler */
-	private static final String CPP_VAL = "g++"; /* C++ compiler */
-	private static final String MAKE_VAL = "make"; /* make command */
+	/** C compiler command */
+	private static final String CC_VAL = "gcc";
+	/** C++ compiler command */
+	private static final String CPP_VAL = "g++";
+	/* make command */
+	private static final String MAKE_VAL = "make";
 	/* command flags */
-	/* archive flags */
+	/** archive flags */
 	private static final String AR_FLAGS_VAL = "cr -o";
-	/* file removal flags */
+	/** file removal flags */
 	private static final String RM_FLAGS_VAL = "-f";
-	/*
+	/**
 	 * static part of C preprocessor flags,
 	 * ie. everything except for include flags
 	 */
 	private static final String
 	STATIC_CPPFLAGS_VAL = "-g -Wall -Wextra -Werror";
-	/* the characters in the relative path from directory to parent */
+	/** the characters in the relative path from directory to parent */
 	private static final char[]
 	TOWARDS_PARENT = {'.', '.', File.separatorChar};
 
-	/*
+	/**
 	 * @param bd				build_dir to pass to
 	 *					the superconstructor
 	 * @throws NotDirectoryException	if bd is not a directory
@@ -71,7 +78,7 @@ public class Mainfile extends Makefile
 			      include_file.isDirectory();
 	}
 
-	/*
+	/**
 	 * Find the relative path
 	 * from a descendant directory to the root directory
 	 * @param descendant			must be descendant directory
@@ -126,7 +133,7 @@ public class Mainfile extends Makefile
 		}
 	}
 
-	/*
+	/**
 	 * error thrown by findRelPath if given directory is not
 	 * contained in path subtree of this root directory
 	 */
@@ -146,7 +153,7 @@ public class Mainfile extends Makefile
 		}
 	}
 
-	/*
+	/**
 	 * Returns if there is a common include directory
 	 * @return has_include
 	 */
@@ -155,7 +162,7 @@ public class Mainfile extends Makefile
 		return has_include;
 	}
 
-	/*
+	/**
 	 * Generate the Makefiles for the whole project,
 	 * as well as the common resources file
 	 * @throws IOException	if there was an error in writing the Makefiles
