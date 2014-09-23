@@ -6,5 +6,8 @@ To compile, run "make", which will generate "make_utils.jar",
 which you can use with your own Java programs to automate
 the creation of Makefiles for large C/C++ projects.
 
+Example programs will also be created during "make",
+and are in the "examples" folder.
+
 To compile class documentation, run "make docs",
 which will generate documentations that you can access through "index.html".

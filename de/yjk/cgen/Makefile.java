@@ -297,51 +297,30 @@ public class Makefile
 	}
 
 	/**
-	 * Populate with the existing source files,
+	 * After subdirs has been populated,
+	 * populate the Makefile with the existing source files,
 	 * an archive that will be generated from the source files,
-	 * and, recursively, either the given subdirectories,
-	 * or all the subdirectories.
-	 * Returns paths to archives to be generated.
-	 * @param subdir_names	array of subdirectories to use.
-	 *			If empty use none. If null, use all.
+	 * and, recursively, the subdirectories in subdirs,
+	 * with all of their subdirectories.
 	 * @return		list of paths to generated library targets
 	 * @throws IOException	if there was an error in populating
 	 *			the subdirectories,
 	 *			or some of the subdirectories in subdirs
 	 *			do not exist or are not directories
 	 */
-	public List<String> populate(String ... subdir_names) throws IOException
+	private List<String> populateAfterSubdirsAdded() throws IOException
 	{
-		String archive_name;
-		ArchiveTarget archive;
+		List<String> archives = new ArrayList<String>();
 		File[] subfiles = build_dir.listFiles();
-		List<String> archives;
+		ArchiveTarget archive;
+		String archive_name;
 
-		/* get all the subdirectories, and populate them, too */
-		if (subdir_names == null) {
-			for (File subfile : subfiles) {
-				if (subfile.isDirectory()) {
-					addSubdir(new Makefile(subfile, root));
-				}
-			}
-		} else {
-			/*
-			 * check that subdirectories are directories,
-			 * and put them into subdirs_list
-			 */
-			for (String subdir_name : subdir_names) {
-				File subdir = new File(build_dir, subdir_name);
-				if (subdir.isDirectory()) {
-					addSubdir(new Makefile(subdir, root));
-				} else {
-					throw new
-					NotDirectoryException(subdir);
-				}
-			}
-		}
-		archives = new ArrayList<String>();
 		for (Makefile subdir : subdirs) {
-			archives.addAll(subdir.populate());
+			List<String> subarchives = subdir.populateFull();
+			for (String subarchive : subarchives) {
+				archives.add(getName() + File.separator +
+					     subarchive);
+			}
 		}
 
 		/* populate with object files based on source files */
@@ -362,6 +341,60 @@ public class Makefile
 
 		archives.add(archive_name);
 		return archives;
+	}
+
+	/**
+	 * Populate with the given source files,
+	 * an archive that will be generated from the source files,
+	 * and, recursively, the given subdirectories,
+	 * with all of their subdirectories.
+	 * Returns paths to archives to be generated.
+	 * @param subdir_names	array of subdirectories to use.
+	 * @return		list of paths to generated library targets
+	 * @throws IOException	if there was an error in populating
+	 *			the subdirectories,
+	 *			or some of the subdirectories in subdirs
+	 *			do not exist or are not directories
+	 */
+	public List<String> populate(String ... subdir_names) throws IOException
+	{
+		/*
+		 * check that subdirectories are directories,
+		 * and put them into subdirs_list
+		 */
+		for (String subdir_name : subdir_names) {
+			File subdir = new File(build_dir, subdir_name);
+			if (subdir.isDirectory()) {
+				addSubdir(new Makefile(subdir, root));
+			} else {
+				throw new NotDirectoryException(subdir);
+			}
+		}
+
+		return populateAfterSubdirsAdded();
+	}
+
+	/**
+	 * Populate with the given source files,
+	 * an archive that will be generated from the source files,
+	 * and, recursively, all the subdirectories in this directory,
+	 * with all of their subdirectories.
+	 * @return		list of paths to generated library targets
+	 * @throws IOException	if there was an error in populating
+	 *			the subdirectories,
+	 *			or some of the subdirectories in subdirs
+	 *			do not exist or are not directories
+	 */
+	public List<String> populateFull() throws IOException
+	{
+		File[] subfiles = build_dir.listFiles();
+		for (File subfile : subfiles) {
+			if (subfile.isDirectory()) {
+				addSubdir(new Makefile(subfile, root));
+			}
+		}
+
+		return populateAfterSubdirsAdded();
 	}
 
 	/**
