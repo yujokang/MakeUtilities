@@ -18,11 +18,11 @@ public class RecursivePopulate
 	public static void main(String[] args)
 	{
 		try {
-			Mainfile arduino = new Mainfile(new File(TOP_DIR));
+			Mainfile root = new Mainfile(new File(TOP_DIR));
 			/* recursively populate with all the subdirectories. */
-			arduino.populateFull();
+			root.populateFull();
 			/* generate Makefiles and common resource file */
-			arduino.generateProject();
+			root.generateProject();
 		} catch (IOException ioe) {
 			System.out.println("Failed to create Makefiles: " +
 					   ioe);

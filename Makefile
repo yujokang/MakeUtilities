@@ -16,7 +16,8 @@ PUBLIC_CLASSES=${UTILS_DIR}FileFormatter.class ${CGEN_DIR}ArchiveTarget.class \
 	${CGEN_DIR}BinaryTarget.class ${CGEN_DIR}Mainfile.class \
 	${CGEN_DIR}Makefile.class ${CGEN_DIR}Target.class
 
-EXAMPLES_PUBLIC_CLASSES=${EXAMPLES_DIR}RecursivePopulate.class
+EXAMPLES_PUBLIC_CLASSES=${EXAMPLES_DIR}RecursivePopulate.class \
+			${EXAMPLES_DIR}RecursivePopulate_2.class
 
 SOURCES=${PUBLIC_CLASSES:.class=.java}
 CLASSES=${PUBLIC_CLASSES} ${UTILS_DIR}FileFormatter\$$UnindentException.class \
