@@ -1,6 +1,7 @@
 /**
  * RecursivePopulate_2.java
- * Example for creating new project in a chosen file.
+ * Example for creating new project in a chosen file,
+ * as indicated in the first command line argument
  */
 import java.io.File;
 import java.io.IOException;
