@@ -378,7 +378,7 @@ public class Makefile
 	 * Populate with the given source files,
 	 * an archive that will be generated from the source files,
 	 * and, recursively, all the subdirectories in this directory,
-	 * with all of their subdirectories.
+	 * with all of their subdirectories, except for any include folder.
 	 * @return		list of paths to generated library targets
 	 * @throws IOException	if there was an error in populating
 	 *			the subdirectories,
@@ -389,7 +389,8 @@ public class Makefile
 	{
 		File[] subfiles = build_dir.listFiles();
 		for (File subfile : subfiles) {
-			if (subfile.isDirectory()) {
+			if (subfile.isDirectory() &&
+			   !Mainfile.INCLUDE_NAME.equals(subfile.getName())) {
 				addSubdir(new Makefile(subfile, root));
 			}
 		}
