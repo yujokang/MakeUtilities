@@ -20,18 +20,50 @@ public abstract class Target
 	private String[] dependencies;
 
 	/**
+	 * Generic constructor for all numbers of dependencies.
+	 * @param n	name
+	 * @param n_ds	number of dependencies
+	 */
+	private void init(String n, int n_ds)
+	{
+		name = n;
+		dependencies = new String[n_ds];
+	}
+
+	/**
+	 * Constructor for multiple dependencies,
+	 * if a collection can be created ahead of time
 	 * @param n	name
 	 * @param ds	contains elements to put into dependencies
 	 */
 	public Target(String n, Collection<String> ds)
 	{
-		name = n;
-		dependencies = new String[ds.size()];
-		int dependency_i = 0;
+		int dependency_i;
+		init(n, ds.size());
+
+		dependency_i = 0;
 
 		for (String d : ds) {
 			dependencies[dependency_i] = d;
 			dependency_i++;
+		}
+	}
+
+	/**
+	 * Constructor for variable number of dependencies,
+	 * each as an argument
+	 * @param n	name
+	 * @param ds	array of elements to put into dependencies
+	 */
+	public Target(String n, String ... ds)
+	{
+		int dependency_i;
+		init(n, ds.length);
+
+		dependency_i = 0;
+		for (dependency_i = 0; dependency_i < ds.length;
+		     dependency_i++) {
+			dependencies[dependency_i] = ds[dependency_i];
 		}
 	}
 

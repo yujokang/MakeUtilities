@@ -17,8 +17,6 @@ import java.util.Collection;
 import java.io.File;
 import java.io.IOException;
 
-import de.yjk.utils.FileFormatter;
-
 /**
  * Contains Makefile components.
  * Used to generate Makefile
@@ -35,12 +33,63 @@ public class Makefile
 	private List<Target> targets;
 	/** subdirectories, which will at least require own Makefiles */
 	private List<Makefile> subdirs;
+	/** additional variable assignments */
+	private List<VarAssignment> assignments;
+	/**
+	 * custom name of the archive of all the object files.
+	 * null by default, so that archive is named after directory
+	 */
+	private String custom_archive_name;
+	/**
+	 * During automatic population,
+	 * will there be an archive created at all?
+	 * true by default
+	 */
+	private boolean make_object_archive;
+	/**
+	 * Should this folder be cleaned in the
+	 * "clean" rule in the containing folder?
+	 * true by default
+	 */
+	private boolean auto_clean;
+
+	/**
+	 * Internal storage class for additional variable assignments
+	 */
+	private static class VarAssignment
+	{
+		/** The name of the variable. */
+		private String name;
+		/** The expression of the value to assign to the variable. */
+		private String value;
+
+		/**
+		 * @param n	name
+		 * @param v	value
+		 */
+		public VarAssignment(String n, String v)
+		{
+			name = n;
+			value = v;
+		}
+
+		/**
+		 * Write line to assign value to named variable.
+		 * @param output	the file in which to output the
+		 *			assignment line
+	 	 * @throws		IOException if writing failed
+		 */
+		public void doAssign(MakeFormatter output) throws IOException
+		{
+			output.assignVar(name, value);
+		}
+	};
 
 	/* common variable names */
 	public static final String CC_VAR = "CC"; /** C compiler variable */
 	public static final String CPP_VAR = "CXX"; /** C++ compiler variable */
 	/** make command variable */
-	private static final String MAKE_VAR = "MAKE";
+	public static final String MAKE_VAR = "MAKE";
 	/* shell commands */
 	/** variable for archive creator */
 	public static final String AR_VAR = "AR";
@@ -58,7 +107,7 @@ public class Makefile
 	private static final String TARGETS_VAR = "TARGETS";
 	/* directories */
 	/** variable for the include directory option */
-	protected static final String INCLUDE_VAR = "INCLUDE";
+	public static final String INCLUDE_VAR = "INCLUDE";
 	/* command flags */
 	/** variable for the archive command flags */
 	public static final String AR_FLAGS_VAR = "AR_FLAGS";
@@ -241,6 +290,10 @@ public class Makefile
 		object_names = new LinkedList<String>();
 		targets = new LinkedList<Target>();
 		subdirs = new LinkedList<Makefile>();
+		assignments = new LinkedList<VarAssignment>();
+		custom_archive_name = null;
+		make_object_archive = true;
+		auto_clean = true;
 	}
 
 	/**
@@ -280,6 +333,16 @@ public class Makefile
 	}
 
 	/**
+	 * Add an extra variable assignment
+	 * @param name	the "name" field of the VarAssignment instance
+	 * @param value	the "value" field of the VarAssignment instance
+	 */
+	public void addAssignment(String name, String value)
+	{
+		assignments.add(new VarAssignment(name, value));
+	}
+
+	/**
 	 * Helper function of populate function to check if
 	 * a file is a C or C++ source file, according to its name
 	 * @param name	name of possible source file
@@ -312,8 +375,6 @@ public class Makefile
 	{
 		List<String> archives = new ArrayList<String>();
 		File[] subfiles = build_dir.listFiles();
-		ArchiveTarget archive;
-		String archive_name;
 
 		for (Makefile subdir : subdirs) {
 			List<String> subarchives = subdir.populateFull();
@@ -334,12 +395,22 @@ public class Makefile
 				addObject(object_name);
 			}
 		}
-		/* populate target with archive */
-		archive_name = toArchiveName();
-		archive = new ArchiveTarget(archive_name, object_names);
-		addTarget(archive);
+		/* populate target with archive if desired */
+		if (make_object_archive) {
+			ArchiveTarget archive;
+			String archive_name;
 
-		archives.add(archive_name);
+			if (custom_archive_name == null) {
+				archive_name = toArchiveName();
+			} else {
+				archive_name = custom_archive_name;
+			}
+			archive = new ArchiveTarget(archive_name, object_names);
+			addTarget(archive);
+
+			archives.add(archive_name);
+		}
+
 		return archives;
 	}
 
@@ -471,6 +542,11 @@ public class Makefile
 		}
 		output.assignVar(CPPFLAGS_VAR, CPPFLAGS_VAL);
 
+		/* Define additional variables */
+		for (VarAssignment assignment : assignments) {
+			assignment.doAssign(output);
+		}
+
 		/* Define SUBDIRS, OBJS and TARGETS */
 		output.assignVar(SUBDIRS_VAR, subdirs_val);
 		output.assignVar(OBJECTS_VAR, objects_val);
@@ -509,14 +585,21 @@ public class Makefile
 				      MakeFormatter.genUseVar(OBJECTS_VAR),
 				      MakeFormatter.genUseVar(TARGETS_VAR)));
 		output.newLine();
-		/* clean up subdirectories */
+		/*
+		 * Clean up subdirectories
+		 * if they want to be automatically cleaned.
+		 */
 		for (Makefile subdir : subdirs) {
-			output
-			.write(MakeFormatter
-			       .genList(MakeFormatter.genUseVar(MAKE_VAR),
-					MAKE_SWITCH_FLAG, subdir.getName(),
-					MAKE_CLEAN_RULE));
-			output.newLine();
+			if (subdir.auto_clean) {
+				output
+				.write(MakeFormatter
+				       .genList(MakeFormatter
+						.genUseVar(MAKE_VAR),
+						MAKE_SWITCH_FLAG, subdir
+								  .getName(),
+						MAKE_CLEAN_RULE));
+				output.newLine();
+			}
 		}
 		output.unindent();
 		output.close();
@@ -526,111 +609,31 @@ public class Makefile
 			subdir.generate();
 		}
 	}
-}
-
-/**
- * Generates files formatted in the Makefile/shell syntax
- */
-class MakeFormatter extends FileFormatter
-{
-	/** template for using value of variable */
-	private static final String VAR_USE_FMT = "$(%s)";
-	/** template for assigning value of variable */
-	private static final String VAR_DEF_FMT = "%s=%s";
-	/** template for concatenating value to variable */
-	private static final String VAR_CAT_FMT = "%s+=%s";
-
-	/** delimiter between list elements, such as multiple options */
-	public static final char LIST_DELIM = ' ';
 
 	/**
-	 * Constructor for FileFormatter(File)
-	 * @param in_file	File object to pass to the superconstructor
-	 * @throws IOException	if that is thrown by superconstructor
+	 * Set "custom_archive_name" field
+	 * @param can	the new value for "custom_archive_name"
 	 */
-	public MakeFormatter(File in_file) throws IOException
+	public void setCustomArchiveName(String can)
 	{
-		super(in_file);
+		custom_archive_name = can;
 	}
 
 	/**
-	 * Write line to assign value to named variable
-	 * @param name		name of variable
-	 * @param value		new value of variable
-	 * @throws IOException	if there was an error during writing
+	 * Set "make_object_archive" field
+	 * @param moa	the new value for "make_object_archive"
 	 */
-	public void assignVar(String name, String value) throws IOException
+	public void setMakeObjectArchive(boolean moa)
 	{
-		write(String.format(VAR_DEF_FMT, name, value));
-		newLine();
+		make_object_archive = moa;
 	}
 
 	/**
-	 * Write line to append value to named variable
-	 * @param name		name of variable
-	 * @param append_value	value to append variable
-	 * @throws IOException	if there was an error during writing
+	 * Set "auto_clean" field
+	 * @param ac	the new value for "auto_clean"
 	 */
-	public void appendVar(String name,
-			      String append_value) throws IOException
+	public void setAutoClean(boolean ac)
 	{
-		write(String.format(VAR_CAT_FMT, name, append_value));
-		newLine();
-	}
-
-	/**
-	 * Write variable dereferencing expression
-	 * @param name		name of variable
-	 * @return		expression for dereferencing variable
-	 */
-	public static String genUseVar(String name)
-	{
-		return String.format(VAR_USE_FMT, name);
-	}
-
-	/**
-	 * Join String elements by list delimiter
-	 * @param elements	array of elements to join.
-	 *			Can be null or empty, for an empty return value
-	 * @return		delimited list of element
-	 */
-	public static String genList(String ... elements)
-	{
-		if (elements != null && elements.length > 0) {
-			/* count and allocate number of characters needed */
-			/*
-			 * will have to subtract 1 because output won't need
-			 * delimiter before first element,
-			 * and add 1 for 0 character
-			 */
-			int char_count = elements.length - 1 + 1;
-			StringBuilder list_builder;
-
-			for (String element : elements) {
-				char_count += element.length();
-			}
-			list_builder = new StringBuilder(char_count);
-
-			/* copy over needed characters */
-			/*
-			 * first element is special,
-			 * without delimiter in front
-			 */
-			list_builder.append(elements[0].toCharArray());
-			/*
-			 * rest of elements have delimiter in front,
-			 * to separate from the previous element
-			 */
-			for (int element_i = 1; element_i < elements.length;
-			     element_i++) {
-				list_builder.append(LIST_DELIM);
-				list_builder.append(elements[element_i]
-						    .toCharArray());
-			}
-			return list_builder.toString();
-		} else {
-			/* return empty String for null array or no elements */
-			return "";
-		}
+		auto_clean = ac;
 	}
 }

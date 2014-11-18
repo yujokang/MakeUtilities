@@ -14,10 +14,14 @@ EXAMPLES_DIR=examples/
 
 PUBLIC_CLASSES=${UTILS_DIR}FileFormatter.class ${CGEN_DIR}ArchiveTarget.class \
 	${CGEN_DIR}BinaryTarget.class ${CGEN_DIR}Mainfile.class \
-	${CGEN_DIR}Makefile.class ${CGEN_DIR}Target.class
+	${CGEN_DIR}Makefile.class ${CGEN_DIR}MakeFormatter.class \
+	${CGEN_DIR}Target.class
 
 EXAMPLES_PUBLIC_CLASSES=${EXAMPLES_DIR}RecursivePopulate.class \
-			${EXAMPLES_DIR}RecursivePopulate_2.class
+			${EXAMPLES_DIR}RecursivePopulate_2.class \
+			${EXAMPLES_DIR}GitTargets.class \
+			${EXAMPLES_DIR}CGen.class \
+			${EXAMPLES_DIR}CGenMain.class
 
 SOURCES=${PUBLIC_CLASSES:.class=.java}
 CLASSES=${PUBLIC_CLASSES} ${UTILS_DIR}FileFormatter\$$UnindentException.class \
@@ -26,7 +30,10 @@ CLASSES=${PUBLIC_CLASSES} ${UTILS_DIR}FileFormatter\$$UnindentException.class \
 	${CGEN_DIR}Mainfile\$$NotDescendantException.class
 
 EXAMPLES_SOURCES=${EXAMPLES_PUBLIC_CLASSES:.class=.java}
-EXAMPLES_CLASSES=${EXAMPLES_PUBLIC_CLASSES}
+EXAMPLES_CLASSES=${EXAMPLES_PUBLIC_CLASSES} \
+		 ${EXAMPLES_DIR}CGen\$$ArchiveCopyTarget.class \
+		 ${EXAMPLES_DIR}GitTargets\$$GitDirTarget.class \
+		 ${EXAMPLES_DIR}GitTargets\$$LibTarget.class
 
 OUT_JAR=make_utils.jar
 

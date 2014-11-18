@@ -47,7 +47,7 @@ public class Mainfile extends Makefile
 	/** archive flags */
 	private static final String AR_FLAGS_VAL = "cr -o";
 	/** file removal flags */
-	private static final String RM_FLAGS_VAL = "-f";
+	private static final String RM_FLAGS_VAL = "-r";
 	/**
 	 * static part of C preprocessor flags,
 	 * ie. everything except for include flags
