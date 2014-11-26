@@ -5,6 +5,7 @@
  * that become available by the time "make" is run inside the folder.
  */
 import de.yjk.cgen.Makefile;
+import de.yjk.cgen.Mainfile;
 import de.yjk.cgen.MakeFormatter;
 import de.yjk.cgen.Target;
 
@@ -34,8 +35,7 @@ public class GitTargets
 	 * containing these targets
 	 */
 	private static final String
-	INCLUDE_TARGET = ".." + File.separator +
-			 MakeFormatter.genUseVar(Makefile.INCLUDE_VAR);
+	INCLUDE_TARGET = ".." + File.separator + Mainfile.INCLUDE_NAME;
 
 	/** the project folder */
 	private String project;
@@ -65,24 +65,52 @@ public class GitTargets
 	 * Add an extra output file to copy from the repository folder.
 	 * @param new_output	the target to add
 	 */
-	public void addOutput(LibTarget new_output)
+	private void addOutput(LibTarget new_output)
 	{
 		new_output.setIsFirst(outputs.size() == 0);
 		outputs.add(new_output);
 	}
 
 	/**
-	 * Add a target for copying an header file
+	 * Add an extra output file to copy from the repository folder
+	 * to the given target folder
+	 * @param target_name		the file name of the target
+	 *				and source
+	 * @param dir_in_project	the directory in the Git folder
+	 *				that contains the source file
+	 * @param dir_in_target		the directory to which to
+	 *				copy the file
+	 */
+	public void addOutput(String target_name, String dir_in_project,
+			      String dir_in_target)
+	{
+		addOutput(new LibTarget(target_name, dir_in_project,
+					dir_in_target));
+	}
+
+	/**
+	 * Add an extra output file to copy from the repository folder
+	 * to the folder containing this rule
+	 * @param target_name		the file name of the target
+	 *				and source
+	 * @param dir_in_project	the directory in the Git folder
+	 *				that contains the source file
+	 */
+	public void addOutput(String target_name, String dir_in_project)
+	{
+		addOutput(new LibTarget(target_name, dir_in_project));
+	}
+
+	/**
+	 * Add a target for copying a header file
 	 * from the "include" folder of the Git project
 	 * to the "include" folder under the root folder.
 	 * @param include_file	the name of the header file to copy
 	 */
 	public void addIncludeOutput(String include_file)
 	{
-		addOutput(new LibTarget(include_file,
-					MakeFormatter.genUseVar(Makefile
-								.INCLUDE_VAR),
-					INCLUDE_TARGET));
+		addOutput(include_file, Mainfile.INCLUDE_NAME,
+			  INCLUDE_TARGET);
 	}
 
 	/**
@@ -94,7 +122,7 @@ public class GitTargets
 		lib_dir.addAssignment(GIT_CLONE_VAR, GIT_CLONE_CMD);
 		lib_dir.addTarget(src_dir);
 		for (LibTarget output : outputs) {
-			lib_dir.addTarget(src_dir);
+			lib_dir.addTarget(output);
 		}
 	}
 
@@ -121,14 +149,33 @@ public class GitTargets
 		}
 	}
 
+
+	/*
+	 * Calculate the target to put into the Target super constructor
+	 * of the LibTarget class below
+	 * @param target_name		the file name of the target
+	 *				and source
+	 * @param dir_in_target		the directory to which to
+	 *				copy the file
+	 * returns			path to target
+	 */
+	private static String calcTarget(String target_name,
+					 String dir_in_target)
+	{
+		return dir_in_target + File.separator + target_name;
+	}
+
 	/**
 	 * The Target subclass for copying external files
 	 * into the desired location.
 	 */
-	public class LibTarget extends Target
+	private class LibTarget extends Target
 	{
 		/** the copy command for copying files out of a folder */
 		private static final String COPY_CMD = "cp";
+		/**
+		 * the local directory, which is the default target directory
+		 */
 		private static final String LOCAL_DIR = ".";
 
 		/** the path to the source file inside the Git repository */
@@ -158,31 +205,16 @@ public class GitTargets
 		}
 
 		/**
-		 * Set the target path.
-		 * @param target_name	the file name of the target and source
-		 * @param dir_in_target	the directory to which to copy the file
-		 */
-		private void setTarget(String target_name,
-				       String dir_in_target)
-		{
-			target = dir_in_target + File.separator + target_name;
-		}
-
-		/**
 		 * generic constructor,
 		 * assuming needed parts of all fields are given
 		 * @param target_name		the file name of the target
 		 *				and source
 		 * @param dir_in_project	the directory in the Git folder
 		 *				that contains the source file
-		 * @param dir_in_target		the directory to which to
-		 *				copy the file
 		 */
-		private void init(String target_name, String dir_in_project,
-				  String dir_in_target)
+		private void init(String target_name, String dir_in_project)
 		{
 			setSource(target_name, dir_in_project);
-			setTarget(target_name, dir_in_target);
 
 			is_first = false;
 		}
@@ -199,8 +231,8 @@ public class GitTargets
 		public LibTarget(String target_name, String dir_in_project,
 				 String dir_in_target)
 		{
-			super(target_name, project);
-			init(target_name, dir_in_project, dir_in_target);
+			super(calcTarget(target_name, dir_in_target), project);
+			init(target_name, dir_in_project);
 		}
 
 		/**
@@ -214,8 +246,8 @@ public class GitTargets
 		 */
 		public LibTarget(String target_name, String dir_in_project)
 		{
-			super(target_name, project);
-			init(target_name, dir_in_project, LOCAL_DIR);
+			super(calcTarget(target_name, LOCAL_DIR), project);
+			init(target_name, dir_in_project);
 		}
 
 		/**
@@ -234,8 +266,12 @@ public class GitTargets
 		{
 			String
 			extract_command = MakeFormatter
-					  .genList(COPY_CMD, source, target);
+					  .genList(COPY_CMD, source, getName());
 
+			/*
+			 * The first rule after the clone rule
+			 * will build the project.
+			 */
 			if (is_first) {
 				String
 				make_command = MakeFormatter
@@ -247,10 +283,10 @@ public class GitTargets
 							project);
 
 				output.write(make_command);
+				output.newLine();
 			}
 
 			output.write(extract_command);
 		}
 	}
 }
-

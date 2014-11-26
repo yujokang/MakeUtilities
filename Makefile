@@ -21,7 +21,8 @@ EXAMPLES_PUBLIC_CLASSES=${EXAMPLES_DIR}RecursivePopulate.class \
 			${EXAMPLES_DIR}RecursivePopulate_2.class \
 			${EXAMPLES_DIR}GitTargets.class \
 			${EXAMPLES_DIR}CGen.class \
-			${EXAMPLES_DIR}CGenMain.class
+			${EXAMPLES_DIR}CGenMain.class \
+			${EXAMPLES_DIR}CommonGenMain.class
 
 SOURCES=${PUBLIC_CLASSES:.class=.java}
 CLASSES=${PUBLIC_CLASSES} ${UTILS_DIR}FileFormatter\$$UnindentException.class \
