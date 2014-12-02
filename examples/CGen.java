@@ -65,8 +65,8 @@ public class CGen extends Mainfile
 		 */
 		libs.setAutoClean(false);
 
-		addSubdir(src);
 		addSubdir(libs);
+		addSubdir(src);
 		addSubdir(tests);
 
 		src.populateFull();
