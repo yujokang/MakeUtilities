@@ -9,9 +9,11 @@
  */
 package de.yjk.cgen;
 
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.List;
-import java.util.LinkedList;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Collection;
 
 import java.io.File;
@@ -34,7 +36,7 @@ public class Makefile
 	/** subdirectories, which will at least require own Makefiles */
 	private List<Makefile> subdirs;
 	/** additional variable assignments */
-	private List<VarAssignment> assignments;
+	private Map<String, VarAssignment> assignments;
 	/**
 	 * custom name of the archive of all the object files.
 	 * null by default, so that archive is named after directory
@@ -290,7 +292,7 @@ public class Makefile
 		object_names = new LinkedList<String>();
 		targets = new LinkedList<Target>();
 		subdirs = new LinkedList<Makefile>();
-		assignments = new LinkedList<VarAssignment>();
+		assignments = new TreeMap<String, VarAssignment>();
 		custom_archive_name = null;
 		make_object_archive = true;
 		auto_clean = true;
@@ -333,13 +335,20 @@ public class Makefile
 	}
 
 	/**
-	 * Add an extra variable assignment
+	 * Add an extra variable assignment, if it does not already exist.
 	 * @param name	the "name" field of the VarAssignment instance
 	 * @param value	the "value" field of the VarAssignment instance
+	 * @return	true iff the variable under "name"
+	 *		has not already been assigned
 	 */
-	public void addAssignment(String name, String value)
+	public boolean addAssignment(String name, String value)
 	{
-		assignments.add(new VarAssignment(name, value));
+		if (assignments.containsKey(name)) {
+			return false;
+		}
+
+		assignments.put(name, new VarAssignment(name, value));
+		return true;
 	}
 
 	/**
@@ -543,7 +552,7 @@ public class Makefile
 		output.assignVar(CPPFLAGS_VAR, CPPFLAGS_VAL);
 
 		/* Define additional variables */
-		for (VarAssignment assignment : assignments) {
+		for (VarAssignment assignment : assignments.values()) {
 			assignment.doAssign(output);
 		}
 

@@ -28,6 +28,7 @@ SOURCES=${PUBLIC_CLASSES:.class=.java}
 CLASSES=${PUBLIC_CLASSES} ${UTILS_DIR}FileFormatter\$$UnindentException.class \
 	${CGEN_DIR}MakeFormatter.class \
 	${CGEN_DIR}Makefile\$$NotDirectoryException.class \
+	${CGEN_DIR}Makefile\$$VarAssignment.class \
 	${CGEN_DIR}Mainfile\$$NotDescendantException.class
 
 EXAMPLES_SOURCES=${EXAMPLES_PUBLIC_CLASSES:.class=.java}
