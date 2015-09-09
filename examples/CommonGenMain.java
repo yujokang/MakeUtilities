@@ -31,7 +31,8 @@ public class CommonGenMain
 	COMMONC_ARCHIVE = "commonc.a";
 	/* the desired include files in CommonC */
 	private static final String[] COMMONC_INCLUDES = {
-		"data_structs.h", "debug_assert.h", "logger.h"
+		"data_structs.h", "debug_assert.h", "get_random.h", "logger.h",
+		"permutation.h", "xmath.h"
 	};
 
 	/**
